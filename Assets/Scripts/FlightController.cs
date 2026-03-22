@@ -1,68 +1,65 @@
 // FlightController.cs
-// CENG 454 – HW1: Sky-High Prototype
+// CENG 454 â€“ HW1
 // Author: Nevinnaz Kaplan | Student ID: 220446008
 
 using UnityEngine;
-using UnityEngine.InputSystem; // Unity 6'da hata almamak için bu þart!
+using UnityEngine.InputSystem;
 
 public class FlightController : MonoBehaviour
 {
-    [Header("Flight Parameters")]
-    [SerializeField] private float pitchSpeed = 45f;
-    [SerializeField] private float yawSpeed = 45f;
-    [SerializeField] private float rollSpeed = 45f;
-    [SerializeField] private float thrustSpeed = 10f;
+    // public
+    public float flySpeed = 15f;
+    public float turnSpeed = 45f;
 
-    private Rigidbody rb;
+    private Rigidbody myRb;
 
     void Start()
     {
-        rb = GetComponent<Rigidbody>();
-        if (rb != null)
+        // Rigidbody settings
+        myRb = GetComponent<Rigidbody>();
+
+        if (myRb != null)
         {
-            rb.freezeRotation = true;
-            rb.useGravity = false;
+            myRb.useGravity = false; // No gravity
+            myRb.freezeRotation = true; // Disable physics-based rotation so it is controlled by the user
         }
     }
 
     void Update()
     {
-        HandleFlight();
-    }
+        // Unity 6 Input System control
+        var currentKey = Keyboard.current;
+        if (currentKey == null) return;
 
-    private void HandleFlight()
-    {
-        // YENÝ SÝSTEM: Klavye kontrolü (Keyboard.current üzerinden)
-        var kb = Keyboard.current;
-        if (kb == null) return;
+        // Checking inputs one by one (manual control instead of GetAxis)
+        float pitchVal = 0;
+        float yawVal = 0;
+        float rollVal = 0;
+        float moveForward = 0;
 
-        float pitchInput = 0f;
-        float yawInput = 0f;
-        float rollInput = 0f;
-        float thrustInput = 0f;
+        // Pitch - up down arrow
+        if (currentKey.upArrowKey.isPressed) pitchVal = 1;
+        if (currentKey.downArrowKey.isPressed) pitchVal = -1;
 
-        // Pitch: Yukarý/Aþaðý Ok Tuþlarý
-        if (kb.upArrowKey.isPressed) pitchInput = 1f;
-        else if (kb.downArrowKey.isPressed) pitchInput = -1f;
+        // Yaw - right left arrow
+        if (currentKey.rightArrowKey.isPressed) yawVal = 1;
+        if (currentKey.leftArrowKey.isPressed) yawVal = -1;
 
-        // Yaw: Sol/Sað Ok Tuþlarý
-        if (kb.leftArrowKey.isPressed) yawInput = -1f;
-        else if (kb.rightArrowKey.isPressed) yawInput = 1f;
+        // Roll - Q E Keys
+        if (currentKey.qKey.isPressed) rollVal = 1;
+        if (currentKey.eKey.isPressed) rollVal = -1;
 
-        // Roll: Q ve E Tuþlarý
-        if (kb.qKey.isPressed) rollInput = 1f;
-        else if (kb.eKey.isPressed) rollInput = -1f;
+        // Thrust - thrusting with space
+        if (currentKey.spaceKey.isPressed) moveForward = 1;
 
-        // Thrust: Space (Boþluk)
-        if (kb.spaceKey.isPressed) thrustInput = 1f;
+        // --- MOVEMENT ---
+        // Applying Time.deltaTime to the movement
+        // Rotate the aircraft on its local axes
+        transform.Rotate(Vector3.right * pitchVal * turnSpeed * Time.deltaTime);
+        transform.Rotate(Vector3.up * yawVal * turnSpeed * Time.deltaTime);
+        transform.Rotate(Vector3.forward * rollVal * turnSpeed * Time.deltaTime);
 
-        // HAREKETLERÝ UYGULA
-        // Pitch (X), Yaw (Y), Roll (Z) rotasyonlarý
-        transform.Rotate(Vector3.right * pitchInput * pitchSpeed * Time.deltaTime);
-        transform.Rotate(Vector3.up * yawInput * yawSpeed * Time.deltaTime);
-        transform.Rotate(Vector3.forward * rollInput * rollSpeed * Time.deltaTime);
-
-        // Ýleri gitme (Thrust)
-        transform.Translate(Vector3.forward * thrustInput * thrustSpeed * Time.deltaTime);
+        // Move forward
+        transform.Translate(Vector3.forward * moveForward * flySpeed * Time.deltaTime);
     }
 }
